@@ -26,15 +26,31 @@ export function FlashSalePage() {
   const fetchInventory = useCallback(async () => {
     try {
       const items = await getInventory();
-      if (items.length > 0) {
-        setInventory(items[0]);
-        if (items[0].availableStock <= 0) {
-          setSaleState('sold_out');
-        }
+      if (!Array.isArray(items) || items.length === 0) {
+        setInventory(null);
+        setErrorMessage('Inventory service is unavailable');
+        return;
+      }
+      const first = items[0];
+      if (
+        !first ||
+        typeof first.productName !== 'string' ||
+        typeof first.availableStock !== 'number' ||
+        typeof first.totalStock !== 'number'
+      ) {
+        setInventory(null);
+        setErrorMessage('Inventory service is unavailable');
+        return;
+      }
+      setInventory(first);
+      setErrorMessage(null);
+      if (first.availableStock <= 0) {
+        setSaleState('sold_out');
       }
     } catch (err) {
       console.error('Failed to fetch inventory:', err);
-      setErrorMessage('Failed to load inventory');
+      setInventory(null);
+      setErrorMessage('Backend is offline. Live inventory is unavailable.');
     }
   }, []);
 
@@ -130,6 +146,25 @@ export function FlashSalePage() {
           </h1>
           <p className="text-gray-600">Limited time offer - Don't miss out!</p>
         </div>
+
+        {!inventory && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-12 text-center">
+            <div className="text-amber-500 mb-3">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Service unavailable
+            </h2>
+            <p className="text-gray-600">
+              {errorMessage ?? 'Unable to reach the inventory service right now.'}
+            </p>
+            <p className="text-gray-400 text-sm mt-4">
+              The backend may not be deployed yet.
+            </p>
+          </div>
+        )}
 
         {inventory && (
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

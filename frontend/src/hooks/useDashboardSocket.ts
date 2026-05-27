@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { DashboardStats, getDashboardStats } from '../services/api';
+import { DashboardStats, getDashboardStats, WS_URL } from '../services/api';
 
 interface UseDashboardSocketReturn {
   stats: DashboardStats | null;
@@ -23,50 +23,50 @@ export function useDashboardSocket(): UseDashboardSocketReturn {
       return;
     }
 
-    const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      reconnectDelay: RECONNECT_DELAY,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        setConnected(true);
-        setError(null);
+    try {
+      const client = new Client({
+        webSocketFactory: () => new SockJS(WS_URL),
+        reconnectDelay: RECONNECT_DELAY,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        onConnect: () => {
+          setConnected(true);
+          setError(null);
 
-        client.subscribe('/topic/dashboard', (message: IMessage) => {
-          try {
-            const dashboardStats: DashboardStats = JSON.parse(message.body);
-            setStats(dashboardStats);
-          } catch (e) {
-            console.error('Failed to parse dashboard stats:', e);
-          }
-        });
-      },
-      onDisconnect: () => {
-        setConnected(false);
-      },
-      onStompError: (frame) => {
-        console.error('STOMP error:', frame.headers['message']);
-        setError(`Connection error: ${frame.headers['message']}`);
-        setConnected(false);
-      },
-      onWebSocketError: (event) => {
-        console.error('WebSocket error:', event);
-        setError('WebSocket connection failed');
-        setConnected(false);
-      },
-      onWebSocketClose: () => {
-        setConnected(false);
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-        }
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          connect();
-        }, RECONNECT_DELAY);
-      },
-    });
+          client.subscribe('/topic/dashboard', (message: IMessage) => {
+            try {
+              const dashboardStats: DashboardStats = JSON.parse(message.body);
+              setStats(dashboardStats);
+            } catch (e) {
+              console.error('Failed to parse dashboard stats:', e);
+            }
+          });
+        },
+        onDisconnect: () => {
+          setConnected(false);
+        },
+        onStompError: (frame) => {
+          console.error('STOMP error:', frame.headers['message']);
+          setError(`Connection error: ${frame.headers['message']}`);
+          setConnected(false);
+        },
+        onWebSocketError: (event) => {
+          console.error('WebSocket error:', event);
+          setError('Live updates unavailable (backend not reachable)');
+          setConnected(false);
+        },
+        onWebSocketClose: () => {
+          setConnected(false);
+        },
+      });
 
-    clientRef.current = client;
-    client.activate();
+      clientRef.current = client;
+      client.activate();
+    } catch (e) {
+      console.error('Failed to initialise WebSocket client:', e);
+      setError('Live updates unavailable');
+      setConnected(false);
+    }
   }, []);
 
   useEffect(() => {
