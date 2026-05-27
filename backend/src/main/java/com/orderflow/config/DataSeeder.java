@@ -30,10 +30,19 @@ public class DataSeeder implements ApplicationRunner {
             return;
         }
 
+        int synced = 0;
         for (Product product : products) {
-            inventoryService.syncToRedis(product.getId(), product.getAvailableStock());
+            try {
+                inventoryService.syncToRedis(product.getId(), product.getAvailableStock());
+                synced++;
+            } catch (Exception ex) {
+                log.error(
+                        "Failed to sync product {} to Redis: {}",
+                        product.getId(),
+                        ex.getMessage());
+            }
         }
 
-        log.info("Inventory sync completed. Synced {} products to Redis.", products.size());
+        log.info("Inventory sync completed. Synced {} of {} products to Redis.", synced, products.size());
     }
 }

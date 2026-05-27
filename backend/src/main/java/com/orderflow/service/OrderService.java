@@ -15,6 +15,7 @@ import com.orderflow.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ReservationRepository reservationRepository;
     private final StringRedisTemplate redisTemplate;
-    private final RabbitTemplate rabbitTemplate;
+    private final ObjectProvider<RabbitTemplate> rabbitTemplateProvider;
 
     @Transactional
     public OrderDTO confirmOrder(ConfirmOrderRequest request) {
@@ -72,7 +73,8 @@ public class OrderService {
                 amount,
                 Instant.now()
         );
-        rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_CONFIRMED_QUEUE, event);
+        rabbitTemplateProvider.ifAvailable(template ->
+                template.convertAndSend(RabbitMQConfig.ORDER_CONFIRMED_QUEUE, event));
 
         log.info("Order {} confirmed for reservation {}", order.getId(), reservation.getId());
 

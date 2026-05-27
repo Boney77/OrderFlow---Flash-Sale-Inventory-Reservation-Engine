@@ -1,0 +1,6 @@
+spring:
+  autoconfigure:
+    exclude: []
+orderflow:
+  rabbitmq:
+    enabled: true

@@ -27,7 +27,8 @@ RUN chown -R appuser:appgroup /app
 
 USER appuser
 
+ENV PORT=8080
 EXPOSE 8080
 
-# JVM tuning for containers
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+# JVM tuning for containers (Railway injects PORT at runtime)
+ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dserver.port=${PORT:-8080} -jar app.jar"]
