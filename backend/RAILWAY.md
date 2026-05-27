@@ -58,6 +58,9 @@ Optional:
 CORS_ALLOWED_ORIGINS=https://your-app.vercel.app
 ```
 
+Deployment trigger note: this guide file lives under `backend/` so a small edit here is enough
+to force a fresh Railway rebuild if the watched-path integration ever gets out of sync.
+
 ### Step 5 — Redeploy
 
 Click **Deploy** on the backend service (or push to GitHub if auto-deploy is on).
