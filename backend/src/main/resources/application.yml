@@ -41,12 +41,13 @@ spring:
 
   data:
     redis:
-      host: ${REDISHOST:${REDIS_HOST:localhost}}
-      port: ${REDISPORT:${REDIS_PORT:6379}}
-      password: ${REDISPASSWORD:${REDIS_PASSWORD:}}
+      host: ${SPRING_DATA_REDIS_HOST:${REDISHOST:${REDIS_HOST:localhost}}}
+      port: ${SPRING_DATA_REDIS_PORT:${REDISPORT:${REDIS_PORT:6379}}}
+      username: ${SPRING_DATA_REDIS_USERNAME:${REDISUSER:}}
+      password: ${SPRING_DATA_REDIS_PASSWORD:${REDISPASSWORD:${REDIS_PASSWORD:}}}
       timeout: ${REDIS_TIMEOUT:5000ms}
       ssl:
-        enabled: ${REDIS_SSL:false}
+        enabled: ${SPRING_DATA_REDIS_SSL_ENABLED:${REDIS_SSL:false}}
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
